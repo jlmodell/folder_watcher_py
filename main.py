@@ -111,6 +111,8 @@ def monitor_folder(dir_path: str):
             if mtime <= last_processed:
                 continue
 
+            logger.debug("Processing file: %s (%s > %s)", file, mtime, last_processed)
+
             # Extract the year from the file name
             year_match = year_regex.search(file_path)
             if year_match is None:

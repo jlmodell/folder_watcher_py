@@ -7,8 +7,9 @@ import time
 
 import redis
 import yaml
-from watchdog.events import FileSystemEventHandler
-from watchdog.observers import Observer
+
+# from watchdog.events import FileSystemEventHandler
+# from watchdog.observers import Observer
 
 LOG_PATH = os.path.join(r"//busse/home", "folder_watcher.log")
 if not os.path.exists(LOG_PATH):
@@ -59,64 +60,59 @@ rdb = setup_redis(config["redis"])
 # ------------------------------------------------------------
 
 
-class FolderUpdateHandler(FileSystemEventHandler):
-    def __init__(self):
-        self.last_processed = None
-        self.debounce_time = 1.0
+def monitor_folder(dir_path: str):
+    """Watch a folder for new files and send them to a queue."""
 
-    def on_modified(self, event):
-        if event.is_directory:
-            return
+    last_processed = None
+    year_regex = re.compile(r"\\(\d{4})\s")
 
-        file_path = event.src_path
-        file_name = os.path.basename(file_path)
+    while True:
+        # Get a list of all files in the directory
+        files = os.listdir(dir_path)
 
-        if os.path.splitext(file_name)[
-            1
-        ].lower() == ".xls" and file_name.upper().startswith("E"):
-            now = time.time()
+        # Filter the list to only include .xls files starting with "E"
+        xls_files = [
+            file
+            for file in files
+            if file.lower().endswith(".xls") and file.upper().startswith("E")
+        ]
 
-            if self.last_processed and now - self.last_processed < self.debounce_time:
-                return
+        # Sort the list of .xls files by modification time
+        xls_files.sort(key=lambda file: os.path.getmtime(os.path.join(dir_path, file)))
 
-            self.last_processed = now
+        # Iterate over the list of .xls files and send new files to the queue
+        for file in xls_files:
+            # Check if the file has already been processed
+            if (
+                last_processed is not None
+                and os.path.getmtime(os.path.join(dir_path, file)) <= last_processed
+            ):
+                continue
 
-            logger.info(f"Updated file detected: {file_name}")
+            # Extract the year from the file name
+            year_match = year_regex.search(file)
+            if year_match is None:
+                continue
+            year = year_match.group(1)
 
-            year_regex = re.compile(r"\\(\d{4})\s")
-            year = year_regex.search(file_path).group(1)
+            # Send the file to the queue
+            object = json.dumps(
+                {
+                    "year": year,
+                    "file_name": file,
+                }
+            )
 
-            send_to_queue(year, file_name)
+            logger.debug("Sending to queue: %s", object)
 
+            rdb.rpush(NEW_FILES_QUEUE, object)
 
-def send_to_queue(year: str, file_name: str):
-    object = json.dumps(
-        {
-            "year": year,
-            "file_name": file_name,
-        }
-    )
+        # Update the last_processed time
+        if xls_files:
+            last_processed = os.path.getmtime(os.path.join(dir_path, xls_files[-1]))
 
-    logger.info("Sending to queue: %s", object)
-
-    rdb.rpush(NEW_FILES_QUEUE, object)
-
-
-def monitor_folder(folder_path):
-    event_handler = FolderUpdateHandler()
-    observer = Observer()
-    observer.schedule(event_handler, folder_path, recursive=False)
-    observer.start()
-
-    logger.debug(f"Monitoring updates in folder: {folder_path}")
-
-    try:
-        while True:
-            time.sleep(1)
-    except KeyboardInterrupt:
-        observer.stop()
-
-    observer.join()
+        # Wait for 5 seconds before checking the directory again
+        time.sleep(5)
 
 
 # ------------------------------------------------------------
@@ -125,6 +121,7 @@ def monitor_folder(folder_path):
 def main(path=None):
     if path is None or path == "":
         path = input("Enter path: ")
+
     logger.debug("path: %s", path)
 
     if not os.path.exists(path):

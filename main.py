@@ -115,6 +115,7 @@ def monitor_folder(dir_path: str):
 
             # Extract the year from the file name
             year_match = year_regex.search(file_path)
+            logger.debug("year_match: %s", year_match)
             if year_match is None:
                 continue
             year = year_match.group(1)

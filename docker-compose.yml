@@ -3,8 +3,10 @@ services:
   app:
     container_name: folder_watcher
     restart: unless-stopped
-    build: .    
+    build:
+      context: .
+      dockerfile: Dockerfile    
     volumes:
       - /mnt/busse/it/qc_db:/mnt/busse/it/qc_db
-    user: "jmodell:docker"
+    user: root
     entrypoint: ["/app/main", "/mnt/busse/it/qc_db/2023 Database/Release Reports 2023"]

@@ -63,8 +63,30 @@ rdb = setup_redis(config["redis"])
 def monitor_folder(dir_path: str):
     """Watch a folder for new files and send them to a queue."""
 
-    last_processed = None
     year_regex = re.compile(r"\\(\d{4})\s")
+
+    # Get a list of all files in the directory
+    files = os.listdir(dir_path)
+
+    # Filter the list to only include .xls files starting with "E"
+    xls_files = [
+        file
+        for file in files
+        if file.lower().endswith(".xls") and file.upper().startswith("E")
+    ]
+
+    xls_files.sort(key=lambda file: os.path.getmtime(os.path.join(dir_path, file)))
+
+    last_processed = os.path.getmtime(os.path.join(dir_path, xls_files[-1]))
+
+    logger.debug(
+        "Files: %s",
+        [
+            file
+            for file in os.listdir(dir_path)
+            if file.lower().endswith(".xls") and file.upper().startswith("E")
+        ],
+    )
 
     while True:
         # Get a list of all files in the directory
@@ -82,15 +104,15 @@ def monitor_folder(dir_path: str):
 
         # Iterate over the list of .xls files and send new files to the queue
         for file in xls_files:
+            file_path = os.path.join(dir_path, file)
+            mtime = os.path.getmtime(file_path)
+
             # Check if the file has already been processed
-            if (
-                last_processed is not None
-                and os.path.getmtime(os.path.join(dir_path, file)) <= last_processed
-            ):
+            if mtime <= last_processed:
                 continue
 
             # Extract the year from the file name
-            year_match = year_regex.search(file)
+            year_match = year_regex.search(file_path)
             if year_match is None:
                 continue
             year = year_match.group(1)
@@ -110,6 +132,8 @@ def monitor_folder(dir_path: str):
         # Update the last_processed time
         if xls_files:
             last_processed = os.path.getmtime(os.path.join(dir_path, xls_files[-1]))
+
+            logger.debug("last_processed: %s", last_processed)
 
         # Wait for 5 seconds before checking the directory again
         time.sleep(5)

@@ -14,6 +14,9 @@ import yaml
 LOG_PATH = os.path.join(r"//busse/home", "folder_watcher.log")
 if not os.path.exists(LOG_PATH):
     LOG_PATH = os.path.join("/app", "folder_watcher.log")
+    if not os.path.exists(LOG_PATH):
+        LOG_PATH = os.path.join(os.getcwd(), "folder_watcher.log")
+        assert os.path.exists(LOG_PATH), "Log file not found"
 
 CONFIG_PATH = os.path.join(r"C:\temp", "global", "config.yaml")
 if not os.path.exists(CONFIG_PATH):

@@ -16,8 +16,10 @@ if not os.path.exists(LOG_PATH):
 
 CONFIG_PATH = os.path.join(r"C:\temp", "global", "config.yaml")
 if not os.path.exists(CONFIG_PATH):
-    CONFIG_PATH = os.path.join(os.getcwd(), "config.yaml")
-    assert os.path.exists(CONFIG_PATH), "Config file not found"
+    CONFIG_PATH = os.path.join("/app", "config.yaml")
+    if not os.path.exists(CONFIG_PATH):
+        CONFIG_PATH = os.path.join(os.getcwd(), "config.yaml")
+        assert os.path.exists(CONFIG_PATH), "Config file not found"
 
 NEW_FILES_QUEUE = "queue:new_files"
 

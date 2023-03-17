@@ -2,6 +2,7 @@ import json
 import logging
 import os
 import re
+import sys
 import time
 
 import redis
@@ -117,7 +118,9 @@ def monitor_folder(folder_path):
 # ------------------------------------------------------------
 
 
-def main(path=input("Enter path: ")):
+def main(path=None):
+    if path is None or path == "":
+        path = input("Enter path: ")
     logger.debug("path: %s", path)
 
     if not os.path.exists(path):
@@ -128,4 +131,7 @@ def main(path=input("Enter path: ")):
 
 
 if __name__ == "__main__":
-    main()
+    args = sys.argv[1:]
+    network_path = " ".join(args)
+
+    main(path=network_path)

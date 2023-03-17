@@ -1,5 +1,5 @@
-# Use the official Python 3.11 slim image as the base image
-FROM python:3.11-slim
+# Use the official Python 3 image as the base image
+FROM python:3
 
 # Set the working directory to /app
 WORKDIR /app

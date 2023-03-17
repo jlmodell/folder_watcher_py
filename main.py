@@ -36,6 +36,8 @@ logger = logging.getLogger(__name__)
 with open(CONFIG_PATH, "r") as f:
     config = yaml.safe_load(f)
 
+print(config["redis"])
+
 
 def setup_redis(redis_config: dict[str, str] = None):
     if not redis_config:

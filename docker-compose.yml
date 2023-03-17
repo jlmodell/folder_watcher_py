@@ -6,4 +6,5 @@ services:
     build: .    
     volumes:
       - /mnt/busse/it/qc_db:/mnt/busse/it/qc_db
+    user: "jmodell:docker"
     entrypoint: ["/app/main", "/mnt/busse/it/qc_db/2023 Database/Release Reports 2023"]

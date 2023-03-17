@@ -14,4 +14,4 @@ RUN pip install --no-cache-dir -r requirements.txt && \
     rm -rf build dist *.spec
 
 # Set the entry point for the container to run the application
-ENTRYPOINT ["/app/main"]
+ENTRYPOINT ["/app/main", "/mnt/busse/it/qc_db/2023 Database/Release Reports 2023"]

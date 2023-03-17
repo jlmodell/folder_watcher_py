@@ -37,13 +37,14 @@ with open(CONFIG_PATH, "r") as f:
     config = yaml.safe_load(f)
 
 
-def setup_redis(redis_config: dict[str, str] = None):
-    print(redis_config)
-    if not redis_config:
+def setup_redis(redis_config=None):
+    if redis_config is None:
         logger.error("Redis config not found")
-    if [key for key in redis_config.keys() if key not in ["url", "pass"]]:
-        logger.error("Redis config contains invalid keys")
-        raise ValueError("Redis config contains invalid keys")
+
+    if isinstance(redis_config, dict):
+        if "url" not in redis_config or "pass" not in redis_config:
+            logger.error("Redis config contains invalid keys")
+            raise ValueError("Redis config contains invalid keys")
 
     url, port = redis_config["url"].split(":")
     password = redis_config["pass"]

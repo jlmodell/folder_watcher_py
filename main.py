@@ -64,7 +64,7 @@ def monitor_folder(dir_path: str):
     """Watch a folder for new files and send them to a queue."""
 
     year_regex = re.compile(r"(\\|/)(\d{4})\s")
-    strict_regex = re.compile(r"(\d{4}")
+    strict_regex = re.compile(r"\d{4}")
 
     # Get a list of all files in the directory
     files = os.listdir(dir_path)
